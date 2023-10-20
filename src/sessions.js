@@ -140,7 +140,7 @@ const initializeEvents = (client, sessionId) => {
     waitForNestedObject(client, 'pupPage').then(() => {
       const restartSession = async (sessionId) => {
         sessions.delete(sessionId)
-        await client.destroy().catch(e => {})
+        await client.destroy().catch(e => { })
         setupSession(sessionId)
       }
       client.pupPage.once('close', function () {
@@ -153,7 +153,7 @@ const initializeEvents = (client, sessionId) => {
         console.log(`Error occurred on browser page for ${sessionId}. Restoring`)
         restartSession(sessionId)
       })
-    }).catch(e => {})
+    }).catch(e => { })
   }
 
   checkIfEventisEnabled('auth_failure')
@@ -229,16 +229,20 @@ const initializeEvents = (client, sessionId) => {
   checkIfEventisEnabled('message')
     .then(_ => {
       client.on('message', async (message) => {
-        triggerWebhook(sessionWebhook, sessionId, 'message', { message })
-        if (message.hasMedia && message._data?.size < maxAttachmentSize) {
-          // custom service event
-          checkIfEventisEnabled('media').then(_ => {
-            message.downloadMedia().then(messageMedia => {
-              triggerWebhook(sessionWebhook, sessionId, 'media', { messageMedia, message })
-            }).catch(e => {
-              console.log('Download media error:', e.message)
+        if (message?.from == "status@broadcast") {
+          console.log('status broadcast, ignoring')
+        } else {
+          triggerWebhook(sessionWebhook, sessionId, 'message', { message })
+          if (message.hasMedia && message._data?.size < maxAttachmentSize) {
+            // custom service event
+            checkIfEventisEnabled('media').then(_ => {
+              message.downloadMedia().then(messageMedia => {
+                triggerWebhook(sessionWebhook, sessionId, 'media', { messageMedia, message })
+              }).catch(e => {
+                console.log('Download media error:', e.message)
+              })
             })
-          })
+          }
         }
         if (setMessagesAsSeen) {
           const chat = await message.getChat()
@@ -261,10 +265,14 @@ const initializeEvents = (client, sessionId) => {
   checkIfEventisEnabled('message_create')
     .then(_ => {
       client.on('message_create', async (message) => {
-        triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
-        if (setMessagesAsSeen) {
-          const chat = await message.getChat()
-          chat.sendSeen()
+        if (message?.from == "status@broadcast") {
+          console.log('status broadcast, ignoring')
+        } else {
+          triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
+          if (setMessagesAsSeen) {
+            const chat = await message.getChat()
+            chat.sendSeen()
+          }
         }
       })
     })
