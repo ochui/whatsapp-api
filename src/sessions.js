@@ -91,7 +91,30 @@ const setupSession = (sessionId) => {
       puppeteer: {
         executablePath: process.env.CHROME_BIN || null,
         // headless: false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+        // args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+        args: [
+          '--no-sandbox',
+          '--disable-client-side-phishing-detection',
+          '--disable-setuid-sandbox',
+          '--disable-component-update',
+          '--disable-default-apps',
+          '--disable-popup-blocking',
+          '--disable-offer-store-unmasked-wallet-cards',
+          '--disable-speech-api',
+          '--hide-scrollbars',
+          '--mute-audio',
+          '--disable-extensions',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--no-pings',
+          '--password-store=basic',
+          '--use-mock-keychain',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+        ]
       },
       userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
       authStrategy: localAuth
