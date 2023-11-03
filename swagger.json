@@ -27,7 +27,6 @@
           "Various"
         ],
         "description": "",
-        "parameters": [],
         "responses": {
           "200": {
             "description": "OK"
@@ -73,7 +72,7 @@
       }
     },
     "/session/start/{sessionId}": {
-      "get": {
+      "post": {
         "tags": [
           "Session"
         ],
@@ -137,7 +136,108 @@
           {
             "apiKeyAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhookUrl": {
+                    "type": "string",
+                    "description": "URL for the webhook to receive events from the client",
+                    "example": "https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the session",
+                    "example": "My Session"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "Phone number of the session",
+                    "example": "234567890123"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "description": "Settings of the session",
+                    "example": {
+                      "enabledCallbacks": [
+                        "auth_failure",
+                        "authenticated",
+                        "call",
+                        "change_state",
+                        "disconnected",
+                        "loading_screen",
+                        "media_uploaded",
+                        "message",
+                        "message_ack",
+                        "message_create",
+                        "message_reaction",
+                        "message_revoke_everyone",
+                        "qr",
+                        "ready",
+                        "media"
+                      ],
+                      "alwaysOnline": false,
+                      "markReadOnReply": true,
+                      "sendingDelay": 1000
+                    }
+                  }
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhookUrl": {
+                    "type": "string",
+                    "description": "URL for the webhook to receive events from the client",
+                    "example": "https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the session",
+                    "example": "My Session"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "Phone number of the session",
+                    "example": "234567890123"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "description": "Settings of the session",
+                    "example": {
+                      "enabledCallbacks": [
+                        "auth_failure",
+                        "authenticated",
+                        "call",
+                        "change_state",
+                        "disconnected",
+                        "loading_screen",
+                        "media_uploaded",
+                        "message",
+                        "message_ack",
+                        "message_create",
+                        "message_reaction",
+                        "message_revoke_everyone",
+                        "qr",
+                        "ready",
+                        "media"
+                      ],
+                      "alwaysOnline": false,
+                      "markReadOnReply": true,
+                      "sendingDelay": 1000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/session/status/{sessionId}": {
@@ -408,7 +508,6 @@
         ],
         "summary": "Terminate inactive sessions",
         "description": "Terminates all inactive sessions.",
-        "parameters": [],
         "responses": {
           "200": {
             "description": "Sessions terminated.",
@@ -455,7 +554,6 @@
         ],
         "summary": "Terminate all sessions",
         "description": "Terminates all sessions.",
-        "parameters": [],
         "responses": {
           "200": {
             "description": "Sessions terminated.",

@@ -1,7 +1,12 @@
 
 const qr = require('qr-image')
+const { v4: uuidv4 } = require('uuid');
+
 const { setupSession, deleteSession, validateSession, flushSessions, sessions } = require('../sessions')
 const { sendErrorResponse, waitForNestedObject } = require('../utils')
+
+const db = require('../models')
+const { Instance } = db;
 
 /**
  * Starts a session for the given session ID.
@@ -15,10 +20,47 @@ const { sendErrorResponse, waitForNestedObject } = require('../utils')
  * @throws {Error} If there was an error starting the session.
  */
 const startSession = async (req, res) => {
-  // #swagger.summary = 'Start new session'
-  // #swagger.description = 'Starts a session for the given session ID.'
+  /*
+    #swagger.summary = 'Start new session'
+    #swagger.description = 'Starts a session for the given session ID.'
+      #swagger.requestBody = {
+        required: true,
+        schema: {
+          type: 'object',
+          properties: {
+            webhookUrl: {
+              type: 'string',
+              description: 'URL for the webhook to receive events from the client',
+              example: 'https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d'
+            },
+            name: {
+              type: 'string',
+              description: 'Name of the session',
+              example: 'My Session'
+            },
+            phoneNumber: {
+              type: 'string',
+              description: 'Phone number of the session',
+              example: '234567890123'
+            },
+            settings: {
+              type: 'object',
+              description: 'Settings of the session',
+              example: {
+                "enabledCallbacks": ['auth_failure', 'authenticated', 'call', 'change_state', 'disconnected', 'loading_screen', 'media_uploaded', 'message', 'message_ack', 'message_create', 'message_reaction', 'message_revoke_everyone', 'qr', 'ready', 'media'],
+                "alwaysOnline": false,
+                "markReadOnReply": true,
+                "sendingDelay": 1000
+              }
+            },
+          }
+        }
+      }
+    */
+
   try {
     const sessionId = req.params.sessionId
+    const { webhookUrl, name, phoneNumber, settings } = req.body
     const setupSessionReturn = setupSession(sessionId)
     if (!setupSessionReturn.success) {
       /* #swagger.responses[422] = {
@@ -43,19 +85,72 @@ const startSession = async (req, res) => {
     }
     */
     // wait until the client is created
-    waitForNestedObject(setupSessionReturn.client, 'pupPage')
-      .then(res.json({ success: true, message: setupSessionReturn.message }))
-      .catch((err) => { sendErrorResponse(res, 500, err.message) })
+
+
+    await waitForNestedObject(setupSessionReturn.client, 'pupPage')
+
+    instance_settings_default = {
+      enabledCallbacks: [
+        "auth_failure",
+        "authenticated",
+        "call",
+        "change_state",
+        "disconnected",
+        "loading_screen",
+        "media_uploaded",
+        "message",
+        "message_ack",
+        "message_create",
+        "message_reaction",
+        "message_revoke_everyone",
+        "qr",
+        "ready",
+        "media"
+      ],
+      alwaysOnline: false,
+      markReadOnReply: true,
+      sendingDelay: 1000,
+    }
+
+    const [instance, created] = await Instance.findOrCreate({
+      where: { sessionId: sessionId },
+      defaults: {
+        // wid: setupSessionReturn.client.info.wid,
+        webhookUrl: webhookUrl,
+        authToken: uuidv4(),
+        name: name,
+        sessionId: sessionId,
+        status: 'session_not_connected',
+        phoneNumber: phoneNumber,
+        settings: settings || instance_settings_default,
+      }
+    })
+
+
+    return res.json({
+      success: true,
+      message: setupSessionReturn.message,
+      data: instance
+    })
+
+    // waitForNestedObject(setupSessionReturn.client, '')
+    //   .then(() => {
+    //     return res.json({
+    //       success: true,
+    //       message: setupSessionReturn.message
+    //     })
+    //   })
+    //   .catch((err) => { sendErrorResponse(res, 500, err.message) })
   } catch (error) {
-  /* #swagger.responses[500] = {
-      description: "Server Failure.",
-      content: {
-        "application/json": {
-          schema: { "$ref": "#/definitions/ErrorResponse" }
+    /* #swagger.responses[500] = {
+        description: "Server Failure.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ErrorResponse" }
+          }
         }
       }
-    }
-    */
+      */
     console.log('startSession ERROR', error)
     sendErrorResponse(res, 500, error.message)
   }
@@ -87,6 +182,11 @@ const statusSession = async (req, res) => {
       }
     }
     */
+
+    const instance = await Instance.findOne({ where: { sessionId: sessionId } })
+    if (instance) {
+      sessionData.data = instance
+    }
     res.json(sessionData)
   } catch (error) {
     console.log('statusSession ERROR', error)
@@ -304,15 +404,15 @@ const terminateAllSessions = async (req, res) => {
     */
     res.json({ success: true, message: 'Flush completed successfully' })
   } catch (error) {
-  /* #swagger.responses[500] = {
-      description: "Server Failure.",
-      content: {
-        "application/json": {
-          schema: { "$ref": "#/definitions/ErrorResponse" }
+    /* #swagger.responses[500] = {
+        description: "Server Failure.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ErrorResponse" }
+          }
         }
       }
-    }
-    */
+      */
     console.log('terminateAllSessions ERROR', error)
     sendErrorResponse(res, 500, error.message)
   }
