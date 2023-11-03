@@ -30,11 +30,18 @@ RUN apt-get update -qq \
     libnss3 lsb-release xdg-utils wget \
     && rm -rf /var/lib/apt/lists/*
 
+# install yarn globally 
+RUN npm install -g yarn
+
 # Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+COPY package.json ./
+COPY yarn.lock ./
 
 # Install the dependencies
-RUN npm ci --only=production --ignore-scripts
+# RUN npm ci --only=production --ignore-scripts
+
+# Install the dependencies with yarn
+RUN yarn install --production --ignore-scripts
 
 # Copy the rest of the source code to the working directory
 COPY . .
