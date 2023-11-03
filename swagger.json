@@ -434,7 +434,7 @@
       }
     },
     "/session/terminate/{sessionId}": {
-      "get": {
+      "post": {
         "tags": [
           "Session"
         ],
@@ -502,7 +502,7 @@
       }
     },
     "/session/terminateInactive": {
-      "get": {
+      "post": {
         "tags": [
           "Session"
         ],
@@ -548,7 +548,7 @@
       }
     },
     "/session/terminateAll": {
-      "get": {
+      "post": {
         "tags": [
           "Session"
         ],
