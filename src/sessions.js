@@ -193,70 +193,70 @@ const initializeEvents = async (client, sessionId) => {
   checkIfEventisEnabled('auth_failure', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('auth_failure', (msg) => {
-        triggerWebhook(sessionWebhook, sessionId, 'status', { msg })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'status', { msg })
       })
     })
 
   checkIfEventisEnabled('authenticated', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('authenticated', () => {
-        triggerWebhook(sessionWebhook, sessionId, 'authenticated')
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'authenticated')
       })
     })
 
   checkIfEventisEnabled('call', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('call', async (call) => {
-        triggerWebhook(sessionWebhook, sessionId, 'call', { call })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'call', { call })
       })
     })
 
   checkIfEventisEnabled('change_state', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('change_state', state => {
-        triggerWebhook(sessionWebhook, sessionId, 'change_state', { state })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'change_state', { state })
       })
     })
 
   checkIfEventisEnabled('disconnected', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('disconnected', (reason) => {
-        triggerWebhook(sessionWebhook, sessionId, 'disconnected', { reason })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'disconnected', { reason })
       })
     })
 
   checkIfEventisEnabled('group_join', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('group_join', (notification) => {
-        triggerWebhook(sessionWebhook, sessionId, 'group_join', { notification })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'group_join', { notification })
       })
     })
 
   checkIfEventisEnabled('group_leave', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('group_leave', (notification) => {
-        triggerWebhook(sessionWebhook, sessionId, 'group_leave', { notification })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'group_leave', { notification })
       })
     })
 
   checkIfEventisEnabled('group_update', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('group_update', (notification) => {
-        triggerWebhook(sessionWebhook, sessionId, 'group_update', { notification })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'group_update', { notification })
       })
     })
 
   checkIfEventisEnabled('loading_screen', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('loading_screen', (percent, message) => {
-        triggerWebhook(sessionWebhook, sessionId, 'loading_screen', { percent, message })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'loading_screen', { percent, message })
       })
     })
 
   checkIfEventisEnabled('media_uploaded', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('media_uploaded', (message) => {
-        triggerWebhook(sessionWebhook, sessionId, 'media_uploaded', { message })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'media_uploaded', { message })
       })
     })
 
@@ -266,12 +266,12 @@ const initializeEvents = async (client, sessionId) => {
         if (message?.from == "status@broadcast") {
           console.log('status broadcast, ignoring')
         } else {
-          triggerWebhook(sessionWebhook, sessionId, 'message', { message })
+          triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'message', { message })
           if (message.hasMedia && message._data?.size < maxAttachmentSize) {
             // custom service event
             checkIfEventisEnabled('media', instance.settings.enabledCallbacks).then(_ => {
               message.downloadMedia().then(messageMedia => {
-                triggerWebhook(sessionWebhook, sessionId, 'media', { messageMedia, message })
+                triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'media', { messageMedia, message })
               }).catch(e => {
                 console.log('Download media error:', e.message)
               })
@@ -288,7 +288,7 @@ const initializeEvents = async (client, sessionId) => {
   checkIfEventisEnabled('message_ack', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('message_ack', async (message, ack) => {
-        triggerWebhook(sessionWebhook, sessionId, 'message_ack', { message, ack })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'message_ack', { message, ack })
         if (setMessagesAsSeen) {
           const chat = await message.getChat()
           chat.sendSeen()
@@ -302,7 +302,7 @@ const initializeEvents = async (client, sessionId) => {
         if (message?.from == "status@broadcast") {
           console.log('status broadcast, ignoring')
         } else {
-          triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
+          triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'message_create', { message })
           if (setMessagesAsSeen) {
             const chat = await message.getChat()
             chat.sendSeen()
@@ -314,14 +314,14 @@ const initializeEvents = async (client, sessionId) => {
   checkIfEventisEnabled('message_reaction', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('message_reaction', (reaction) => {
-        triggerWebhook(sessionWebhook, sessionId, 'message_reaction', { reaction })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'message_reaction', { reaction })
       })
     })
 
   checkIfEventisEnabled('message_revoke_everyone', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('message_revoke_everyone', async (after, before) => {
-        triggerWebhook(sessionWebhook, sessionId, 'message_revoke_everyone', { after, before })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'message_revoke_everyone', { after, before })
       })
     })
 
@@ -330,21 +330,21 @@ const initializeEvents = async (client, sessionId) => {
     client.qr = qr
     checkIfEventisEnabled('qr', instance.settings.enabledCallbacks)
       .then(_ => {
-        triggerWebhook(sessionWebhook, sessionId, 'qr', { qr })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'qr', { qr })
       })
   })
 
   checkIfEventisEnabled('ready', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('ready', () => {
-        triggerWebhook(sessionWebhook, sessionId, 'ready')
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'ready')
       })
     })
 
   checkIfEventisEnabled('contact_changed', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('contact_changed', async (message, oldId, newId, isContact) => {
-        triggerWebhook(sessionWebhook, sessionId, 'contact_changed', { message, oldId, newId, isContact })
+        triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'contact_changed', { message, oldId, newId, isContact })
       })
     })
 }

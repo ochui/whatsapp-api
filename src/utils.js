@@ -1,10 +1,36 @@
 const axios = require('axios')
+const crypto = require('crypto');
+
 const { globalApiKey, disabledCallbacks } = require('./config/config')
 
 // Trigger webhook endpoint
-const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
-  axios.post(webhookURL, { dataType, data, sessionId }, { headers: { 'x-api-key': globalApiKey, 'User-Agent': 'Whatsapp/1.0.0 (Calabary.com)' } })
-    .catch(error => console.error('Failed to send new message webhook:', sessionId, dataType, error.message, data))
+const triggerWebhook = (webhookURL, sessionId, authToken, dataType, data) => {
+
+  const secretKey = authToken || globalApiKey;
+
+  const hmac = crypto.createHmac('sha512', secretKey);
+  const sortedData = JSON.stringify(data, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      return Object.keys(value).sort().reduce((sorted, key) => {
+        sorted[key] = value[key];
+        return sorted;
+      }, {});
+    }
+
+    return value;
+  });
+  hmac.update(sortedData);
+  const signature = hmac.digest('hex');
+
+  axios.post(webhookURL, {
+    dataType, data, sessionId
+  }, {
+    headers: {
+      'x-api-key': globalApiKey,
+      'x-signature': signature,
+      'User-Agent': 'Whatsapp/1.0.0 (Calabary.com)'
+    }
+  }).catch(error => console.error('Failed to send new message webhook:', sessionId, dataType, error.message, data))
 }
 
 // Function to send a response with error status and message
