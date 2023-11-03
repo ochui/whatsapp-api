@@ -58,36 +58,10 @@ const startSession = async (req, res) => {
       }
     */
 
+  const sessionId = req.params.sessionId
+
   try {
-    const sessionId = req.params.sessionId
     const { webhookUrl, name, phoneNumber, settings } = req.body
-    const setupSessionReturn = setupSession(sessionId)
-    if (!setupSessionReturn.success) {
-      /* #swagger.responses[422] = {
-        description: "Unprocessable Entity.",
-        content: {
-          "application/json": {
-            schema: { "$ref": "#/definitions/ErrorResponse" }
-          }
-        }
-      }
-      */
-      sendErrorResponse(res, 422, setupSessionReturn.message)
-      return
-    }
-    /* #swagger.responses[200] = {
-      description: "Status of the initiated session.",
-      content: {
-        "application/json": {
-          schema: { "$ref": "#/definitions/StartSessionResponse" }
-        }
-      }
-    }
-    */
-    // wait until the client is created
-
-
-    await waitForNestedObject(setupSessionReturn.client, 'pupPage')
 
     instance_settings_default = {
       enabledCallbacks: [
@@ -127,6 +101,34 @@ const startSession = async (req, res) => {
     })
 
 
+    const setupSessionReturn = setupSession(sessionId, instance)
+    if (!setupSessionReturn.success) {
+      /* #swagger.responses[422] = {
+        description: "Unprocessable Entity.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ErrorResponse" }
+          }
+        }
+      }
+      */
+      sendErrorResponse(res, 422, setupSessionReturn.message)
+      return
+    }
+    /* #swagger.responses[200] = {
+      description: "Status of the initiated session.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/StartSessionResponse" }
+        }
+      }
+    }
+    */
+    // wait until the client is created
+
+
+    await waitForNestedObject(setupSessionReturn.client, 'pupPage')
+
     return res.json({
       success: true,
       message: setupSessionReturn.message,
@@ -152,6 +154,11 @@ const startSession = async (req, res) => {
       }
       */
     console.log('startSession ERROR', error)
+    // delete instance if it was created
+    const instance = await Instance.findOne({ where: { sessionId: sessionId } })
+    if (instance) {
+      await instance.destroy()
+    }
     sendErrorResponse(res, 500, error.message)
   }
 }

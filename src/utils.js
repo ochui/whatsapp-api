@@ -34,8 +34,12 @@ const waitForNestedObject = (rootObj, nestedPath, maxWaitTime = 10000, interval 
   })
 }
 
-const checkIfEventisEnabled = (event) => {
-  return new Promise((resolve, reject) => { if (!disabledCallbacks.includes(event)) { resolve() } })
+const checkIfEventisEnabled = (event, enabledCallbacks) => {
+  return new Promise((resolve, reject) => {
+    if (enabledCallbacks.includes(event)) {
+      resolve()
+    }
+  })
 }
 
 module.exports = {
