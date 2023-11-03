@@ -313,6 +313,13 @@ const terminateSession = async (req, res) => {
       return res.json(validation)
     }
     await deleteSession(sessionId, validation)
+
+    // delete instance
+    const instance = await Instance.findOne({ where: { sessionId: sessionId } })
+    if (instance) {
+      await instance.destroy()
+    }
+
     /* #swagger.responses[200] = {
       description: "Sessions terminated.",
       content: {
