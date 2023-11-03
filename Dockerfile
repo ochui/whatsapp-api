@@ -31,7 +31,7 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/*
 
 # install yarn globally 
-RUN npm install -g yarn
+# RUN npm install -g yarn
 
 # Copy package.json and package-lock.json to the working directory
 COPY package.json ./
