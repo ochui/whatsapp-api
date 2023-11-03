@@ -8,6 +8,10 @@ const triggerWebhook = (webhookURL, sessionId, authToken, dataType, data) => {
 
   const secretKey = authToken || globalApiKey;
 
+  if (!data) {
+    data = dataType;
+  }
+
   const hmac = crypto.createHmac('sha512', secretKey);
   const sortedData = JSON.stringify(data, (key, value) => {
     if (typeof value === 'object' && value !== null) {
