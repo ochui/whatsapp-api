@@ -1,4 +1,4 @@
-const { globalApiKey, rateLimitMax, rateLimitWindowMs } = require('./config')
+const { globalApiKey, rateLimitMax, rateLimitWindowMs } = require('./config/config')
 const { sendErrorResponse } = require('./utils')
 const { validateSession } = require('./sessions')
 const rateLimiting = require('express-rate-limit')

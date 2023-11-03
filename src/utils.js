@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { globalApiKey, disabledCallbacks } = require('./config')
+const { globalApiKey, disabledCallbacks } = require('./config/config')
 
 // Trigger webhook endpoint
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {

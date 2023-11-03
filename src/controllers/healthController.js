@@ -1,6 +1,6 @@
 const fs = require('fs')
 const qrcode = require('qrcode-terminal')
-const { sessionFolderPath } = require('../config')
+const { sessionFolderPath } = require('../config/config')
 const { sendErrorResponse } = require('../utils')
 
 /**
