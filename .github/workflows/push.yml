@@ -21,16 +21,16 @@ jobs:
     steps:
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready --host=postgres --port=5432 --username=postgres; do
+          until pg_isready --username=postgres; do
             echo "Waiting for PostgreSQL to start..."
             sleep 2
           done
 
       - name: Create Test Database
         run: |
-          psql -h postgres -U postgres -d postgres -c ""CREATE USER wapi_test_user WITH ENCRYPTED PASSWORD '1234567890';"
-          psql -h postgres -U postgres -d postgres -c "CREATE DATABASE wapi_test;"
-          psql -h postgres -U postgres -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE wapi_test TO wapi_test_user;"
+          psql  -U postgres -d postgres -c ""CREATE USER wapi_test_user WITH ENCRYPTED PASSWORD '1234567890';"
+          psql  -U postgres -d postgres -c "CREATE DATABASE wapi_test;"
+          psql  -U postgres -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE wapi_test TO wapi_test_user;"
 
   test:
     runs-on: ubuntu-latest
