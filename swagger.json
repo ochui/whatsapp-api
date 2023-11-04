@@ -433,6 +433,165 @@
         ]
       }
     },
+    "/session/update/{sessionId}": {
+      "post": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Update instance settings",
+        "description": "Updates the instance settings.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": "f8377d8d-a589-4242-9ba6-9486a04ef80c"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Instance settings updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateInstanceSettingsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhookUrl": {
+                    "type": "string",
+                    "description": "URL for the webhook to receive events from the client",
+                    "example": "https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the session",
+                    "example": "My Session"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "description": "Settings of the session",
+                    "example": {
+                      "enabledCallbacks": [
+                        "auth_failure",
+                        "authenticated",
+                        "call",
+                        "change_state",
+                        "disconnected",
+                        "loading_screen",
+                        "media_uploaded",
+                        "message",
+                        "message_ack",
+                        "message_create",
+                        "message_reaction",
+                        "message_revoke_everyone",
+                        "qr",
+                        "ready",
+                        "media"
+                      ],
+                      "alwaysOnline": false,
+                      "markReadOnReply": true,
+                      "sendingDelay": 1000
+                    }
+                  }
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "webhookUrl": {
+                    "type": "string",
+                    "description": "URL for the webhook to receive events from the client",
+                    "example": "https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the session",
+                    "example": "My Session"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "description": "Settings of the session",
+                    "example": {
+                      "enabledCallbacks": [
+                        "auth_failure",
+                        "authenticated",
+                        "call",
+                        "change_state",
+                        "disconnected",
+                        "loading_screen",
+                        "media_uploaded",
+                        "message",
+                        "message_ack",
+                        "message_create",
+                        "message_reaction",
+                        "message_revoke_everyone",
+                        "qr",
+                        "ready",
+                        "media"
+                      ],
+                      "alwaysOnline": false,
+                      "markReadOnReply": true,
+                      "sendingDelay": 1000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/session/terminate/{sessionId}": {
       "post": {
         "tags": [

@@ -40,6 +40,7 @@ sessionRouter.post('/start/:sessionId', middleware.sessionNameValidation, sessio
 sessionRouter.get('/status/:sessionId', middleware.sessionNameValidation, sessionController.statusSession)
 sessionRouter.get('/qr/:sessionId', middleware.sessionNameValidation, sessionController.sessionQrCode)
 sessionRouter.get('/qr/:sessionId/image', middleware.sessionNameValidation, sessionController.sessionQrCodeImage)
+sessionRouter.post('/update/:sessionId', middleware.sessionNameValidation, sessionController.updateInstanceSettings)
 sessionRouter.post('/terminate/:sessionId', middleware.sessionNameValidation, sessionController.terminateSession)
 sessionRouter.post('/terminateInactive', sessionController.terminateInactiveSessions)
 sessionRouter.post('/terminateAll', sessionController.terminateAllSessions)

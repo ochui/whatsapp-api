@@ -352,6 +352,98 @@ const terminateSession = async (req, res) => {
   }
 }
 
+
+
+/**
+ * Updates the instance settings.
+ * 
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error updating the instance settings.
+ */
+const updateInstanceSettings = async (req, res) => {
+  /*
+  #swagger.summary = 'Update instance settings'
+  #swagger.description = 'Updates the instance settings.'
+
+  #swagger.parameters['sessionId'] = {
+    in: 'path',
+    description: 'Session ID',
+    required: true,
+    type: 'string'
+  }
+
+  #swagger.requestBody = {
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        webhookUrl: {
+          type: 'string',
+          description: 'URL for the webhook to receive events from the client',
+          example: 'https://webhook.site/0d0d0d0d-0d0d-0d0d-0d0d-0d0d0d0d0d0d'
+        },
+        name: {
+          type: 'string',
+          description: 'Name of the session',
+          example: 'My Session'
+        },
+        settings: {
+          type: 'object',
+          description: 'Settings of the session',
+          example: {
+            "enabledCallbacks": ['auth_failure', 'authenticated', 'call', 'change_state', 'disconnected', 'loading_screen', 'media_uploaded', 'message', 'message_ack', 'message_create', 'message_reaction', 'message_revoke_everyone', 'qr', 'ready', 'media'],
+            "alwaysOnline": false,
+            "markReadOnReply": true,
+            "sendingDelay": 1000
+          }
+        },
+      }
+    }
+  }
+
+  */
+
+  try {
+    const { sessionId } = req.params
+    const instance = await Instance.findOne({ where: { sessionId: sessionId } })
+
+    if (!instance) {
+      return res.json({ success: false, message: 'instance_not_found' })
+    }
+
+    await instance.update({...req.body})
+
+    /* #swagger.responses[200] = {
+      description: "Instance settings updated.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/UpdateInstanceSettingsResponse" }
+        }
+      }
+    }
+    */
+    res.json({ success: true, message: 'Instance settings updated.', data: instance })
+  } catch (error) {
+
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    console.log('updateInstanceSettings ERROR', error)
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+
 /**
  * Terminates all inactive sessions.
  *
@@ -439,5 +531,6 @@ module.exports = {
   sessionQrCodeImage,
   terminateSession,
   terminateInactiveSessions,
-  terminateAllSessions
+  terminateAllSessions,
+  updateInstanceSettings
 }
