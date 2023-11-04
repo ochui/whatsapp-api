@@ -67,8 +67,16 @@ const restoreSessions = () => {
         const match = file.match(/^session-(.+)$/)
         if (match) {
           const sessionId = match[1]
-          console.log('existing session detected', sessionId)
-          setupSession(sessionId)
+          // check instance status and restore only if it is not stopped
+          console.log('checking instance status', sessionId)
+          Instance.findOne({ where: { sessionId: sessionId } }).then(instance => {
+            if (instance.status !== 'STOP') {
+              console.log('existing session detected', sessionId)
+              setupSession(sessionId)
+            } else {
+              console.log('Instance stopped, not restoring', sessionId)
+            }
+          }).catch(e => console.log(`An error occurred: ${e.message} for ${sessionId}`))
         }
       }
     })
@@ -401,6 +409,61 @@ const deleteSession = async (sessionId, validation) => {
   }
 }
 
+
+// Function to stop, start or restart a session
+const updateSessionState = async (sessionId, action) => {
+  try {
+
+    if (action === 'stop') {
+      const client = sessions.get(sessionId)
+
+      if (!client) {
+        return { success: false, message: 'Session not found' }
+      }
+      console.log(`Stopping session ${sessionId}`)
+      // remove all listeners
+      client.pupPage.removeAllListeners('close')
+      client.pupPage.removeAllListeners('error')
+
+      await client.pupBrowser.close()
+      sessions.delete(sessionId)
+      console.log(`Session ${sessionId} stopped`)
+    }
+
+    if (action === 'start') {
+      console.log(`Starting session ${sessionId}`)
+      setupSession(sessionId)
+      console.log(`Session ${sessionId} started`)
+    }
+
+    if (action === 'restart') {
+      const client = sessions.get(sessionId)
+
+      if (!client) {
+        return { success: false, message: 'Session not found' }
+      }
+      // remove all listeners
+      console.log(`Restarting session ${sessionId}`)
+      client.pupPage.removeAllListeners('close')
+      client.pupPage.removeAllListeners('error')
+      await client.pupBrowser.close()
+      sessions.delete(sessionId)
+      setupSession(sessionId)
+      console.log(`Session ${sessionId} restarted`)
+    }
+
+    // Update the instance status
+    await Instance.update({ status: action.toUpperCase() }, { where: { sessionId: sessionId } })
+    let instance = await Instance.findOne({ where: { sessionId: sessionId } })
+    sessionWebhook = instance.webhookUrl || baseWebhookURL
+    triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'state', { status: action.toUpperCase() })
+
+  } catch (error) {
+    console.log(error)
+    return { success: false, message: error.message }
+  }
+}
+
 // Function to handle session flush
 const flushSessions = async (deleteOnlyInactive) => {
   try {
@@ -430,5 +493,6 @@ module.exports = {
   restoreSessions,
   validateSession,
   deleteSession,
-  flushSessions
+  flushSessions,
+  updateSessionState
 }

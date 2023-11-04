@@ -2,7 +2,7 @@
 const qr = require('qr-image')
 const { v4: uuidv4 } = require('uuid');
 
-const { setupSession, deleteSession, validateSession, flushSessions, sessions } = require('../sessions')
+const { setupSession, deleteSession, validateSession, flushSessions, updateSessionState, sessions } = require('../sessions')
 const { sendErrorResponse, waitForNestedObject } = require('../utils')
 
 const db = require('../models')
@@ -159,6 +159,79 @@ const startSession = async (req, res) => {
     if (instance) {
       await instance.destroy()
     }
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * @function
+ * @async
+ * @param {Object} req 
+ * @param {Object} res 
+ * @param {string} req.params.sessionId - The session ID to stop.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error stopping the session.
+ */
+const updateSession = async (req, res) => {
+  /*
+    #swagger.summary = 'Update session state (start, stop or restart)'
+    #swagger.description = 'Starts a session for the given session ID.'
+      #swagger.requestBody = {
+        required: true,
+        schema: {
+          type: 'object',
+          properties: {
+            action: {
+              type: 'string',
+              description: 'Action to perform on the session',
+              example: 'start'
+            }
+          }
+        }
+      }
+    */
+  try {
+    const sessionId = req.params.sessionId
+    const action = req.body.action
+
+
+    if (!['start', 'stop', 'restart'].includes(action)) {
+      return res.json({ success: false, message: 'invalid_action' })
+    }
+
+    if (action === 'stop' || action === 'restart') {
+      const validation = await validateSession(sessionId)
+      if (validation.message === 'session_not_found') {
+        return res.json(validation)
+      }
+    }
+
+
+    console.log('updateSession', sessionId, action)
+
+    await updateSessionState(sessionId, action)
+    // await deleteSession(sessionId, validation)
+    /* #swagger.responses[200] = {
+      description: "Session stopped.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/StopSessionResponse" }
+        }
+      }
+    }
+    */
+    res.json({ success: true, message: 'Operation successful' })
+  } catch (error) {
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    console.log('stopSession ERROR', error)
     sendErrorResponse(res, 500, error.message)
   }
 }
@@ -415,7 +488,7 @@ const updateInstanceSettings = async (req, res) => {
       return res.json({ success: false, message: 'instance_not_found' })
     }
 
-    await instance.update({...req.body})
+    await instance.update({ ...req.body })
 
     /* #swagger.responses[200] = {
       description: "Instance settings updated.",
@@ -526,6 +599,7 @@ const terminateAllSessions = async (req, res) => {
 
 module.exports = {
   startSession,
+  updateSession,
   statusSession,
   sessionQrCode,
   sessionQrCodeImage,

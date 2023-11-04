@@ -37,6 +37,7 @@ sessionRouter.use(middleware.sessionSwagger)
 routes.use('/session', sessionRouter)
 
 sessionRouter.post('/start/:sessionId', middleware.sessionNameValidation, sessionController.startSession)
+sessionRouter.post('/action/:sessionId', middleware.sessionNameValidation, sessionController.updateSession)
 sessionRouter.get('/status/:sessionId', middleware.sessionNameValidation, sessionController.statusSession)
 sessionRouter.get('/qr/:sessionId', middleware.sessionNameValidation, sessionController.sessionQrCode)
 sessionRouter.get('/qr/:sessionId/image', middleware.sessionNameValidation, sessionController.sessionQrCodeImage)
