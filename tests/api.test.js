@@ -1,17 +1,32 @@
 const request = require('supertest')
 const fs = require('fs')
+const path = require('path');
+const { Sequelize } = require('sequelize');
+const { Umzug, SequelizeStorage } = require('umzug');
+const { sequelize } = require('../src/models/index');
 
 // Mock your application's environment variables
 process.env.API_KEY = 'test_api_key'
 process.env.SESSIONS_PATH = './sessions_test'
 process.env.ENABLE_LOCAL_CALLBACK_EXAMPLE = 'TRUE'
 process.env.BASE_WEBHOOK_URL = 'http://localhost:3000/localCallbackExample'
+process.env.NODE_ENV = 'test'
 
-const app = require('../src/app')
+// // Create a new Umzug instance that will be used to run migrations.
+// const umzug = new Umzug({
+//   migrations: { glob: `${path.join(process.cwd(), './migrations')}/*.js` },
+//   context: sequelize.getQueryInterface(),
+//   storage: new SequelizeStorage({ sequelize }),
+//   logger: console,
+// });
+
+
+
+const app = require('../src/app');
 jest.mock('qrcode-terminal')
 
 let server
-beforeAll(() => {
+beforeAll(async () => {
   server = app.listen(3000)
 })
 
@@ -21,7 +36,7 @@ beforeEach(async () => {
   }
 })
 
-afterAll(() => {
+afterAll(async () => {
   server.close()
   fs.rmSync('./sessions_test', { recursive: true, force: true })
 })
@@ -54,49 +69,80 @@ describe('API Authentication Tests', () => {
   })
 
   it('should fail invalid sessionId', async () => {
-    const response = await request(app).get('/session/start/ABCD1@').set('x-api-key', 'test_api_key')
+    const response = await request(app).post('/session/start/ABCD1@').set('x-api-key', 'test_api_key')
     expect(response.status).toBe(422)
     expect(response.body).toEqual({ success: false, error: 'Session should be alphanumerical or -' })
   })
 
   it('should setup and terminate a client session', async () => {
-    const response = await request(app).get('/session/start/1').set('x-api-key', 'test_api_key')
-    expect(response.status).toBe(200)
-    expect(response.body).toEqual({ success: true, message: 'Session initiated successfully' })
-    expect(fs.existsSync('./sessions_test/session-1')).toBe(true)
+    const response = await request(app).post('/session/start/10').send(
+      {
+        webhookUrl: 'http://localhost:3000/localCallbackExample',
+        name: 'Test Session 10',
+        phoneNumber: '1234567890',
+      }
+    ).set('x-api-key', 'test_api_key')
 
-    const response2 = await request(app).get('/session/terminate/1').set('x-api-key', 'test_api_key')
+    expect(response.status).toBe(200)
+    expect(response.body.data.name).toEqual('Test Session 10')
+    expect(response.body.message).toEqual('Session initiated successfully')
+    expect(fs.existsSync('./sessions_test/session-10')).toBe(true)
+
+    const response2 = await request(app).post('/session/terminate/10').set('x-api-key', 'test_api_key')
     expect(response2.status).toBe(200)
     expect(response2.body).toEqual({ success: true, message: 'Logged out successfully' })
 
-    expect(fs.existsSync('./sessions_test/session-1')).toBe(false)
+    expect(fs.existsSync('./sessions_test/session-10')).toBe(false)
   }, 10000)
 
   it('should setup and flush multiple client sessions', async () => {
-    const response = await request(app).get('/session/start/2').set('x-api-key', 'test_api_key')
-    expect(response.status).toBe(200)
-    expect(response.body).toEqual({ success: true, message: 'Session initiated successfully' })
-    expect(fs.existsSync('./sessions_test/session-2')).toBe(true)
+    const response1 = await request(app).post('/session/start/20').send(
+      {
+        webhookUrl: 'http://localhost:3000/localCallbackExample',
+        name: 'Test Session 20',
+        phoneNumber: '1234567892',
+      }
+    ).set('x-api-key', 'test_api_key')
 
-    const response2 = await request(app).get('/session/start/3').set('x-api-key', 'test_api_key')
+    expect(response1.status).toBe(200)
+    expect(response1.body.data.name).toEqual('Test Session 20')
+    expect(response1.body.message).toEqual('Session initiated successfully')
+    expect(fs.existsSync('./sessions_test/session-20')).toBe(true)
+
+    const response2 = await request(app).post('/session/start/30').send(
+      {
+        webhookUrl: 'http://localhost:3000/localCallbackExample',
+        name: 'Test Session 30',
+        phoneNumber: '1234567893',
+      }
+    ).set('x-api-key', 'test_api_key')
+
     expect(response2.status).toBe(200)
-    expect(response2.body).toEqual({ success: true, message: 'Session initiated successfully' })
-    expect(fs.existsSync('./sessions_test/session-3')).toBe(true)
+    expect(response2.body.data.name).toEqual('Test Session 30')
+    expect(response2.body.message).toEqual('Session initiated successfully')
+    expect(fs.existsSync('./sessions_test/session-30')).toBe(true)
 
-    const response3 = await request(app).get('/session/terminateInactive').set('x-api-key', 'test_api_key')
+    const response3 = await request(app).post('/session/terminateInactive').set('x-api-key', 'test_api_key')
     expect(response3.status).toBe(200)
     expect(response3.body).toEqual({ success: true, message: 'Flush completed successfully' })
 
-    expect(fs.existsSync('./sessions_test/session-2')).toBe(false)
-    expect(fs.existsSync('./sessions_test/session-3')).toBe(false)
+    expect(fs.existsSync('./sessions_test/session-20')).toBe(false)
+    expect(fs.existsSync('./sessions_test/session-30')).toBe(false)
   }, 10000)
 })
 
 describe('API Action Tests', () => {
   it('should setup, create at least a QR, and terminate a client session', async () => {
-    const response = await request(app).get('/session/start/4').set('x-api-key', 'test_api_key')
+    const response = await request(app).post('/session/start/4').send(
+      {
+        webhookUrl: 'http://localhost:3000/localCallbackExample',
+        name: 'Test Session 4',
+        phoneNumber: '1234567892',
+      }
+    ).set('x-api-key', 'test_api_key')
     expect(response.status).toBe(200)
-    expect(response.body).toEqual({ success: true, message: 'Session initiated successfully' })
+    expect(response.body.data.name).toEqual('Test Session 4')
+    expect(response.body.message).toEqual('Session initiated successfully')
     expect(fs.existsSync('./sessions_test/session-4')).toBe(true)
 
     // Wait for message_log.txt to not be empty
@@ -113,7 +159,7 @@ describe('API Action Tests', () => {
     }
     expect(JSON.parse(fs.readFileSync('./sessions_test/message_log.txt', 'utf-8'))).toEqual(expectedMessage)
 
-    const response2 = await request(app).get('/session/terminate/4').set('x-api-key', 'test_api_key')
+    const response2 = await request(app).post('/session/terminate/4').set('x-api-key', 'test_api_key')
     expect(response2.status).toBe(200)
     expect(response2.body).toEqual({ success: true, message: 'Logged out successfully' })
     expect(fs.existsSync('./sessions_test/session-4')).toBe(false)
