@@ -94,7 +94,7 @@ const startSession = async (req, res) => {
         authToken: uuidv4(),
         name: name,
         sessionId: sessionId,
-        status: 'session_not_connected',
+        status: 'INITIATED',
         phoneNumber: phoneNumber,
         settings: settings || instance_settings_default,
       }

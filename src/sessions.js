@@ -200,6 +200,8 @@ const initializeEvents = async (client, sessionId) => {
   checkIfEventisEnabled('authenticated', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('authenticated', () => {
+        // update the instance status
+        Instance.update({ status: 'CONNECTED' }, { where: { sessionId: sessionId } })
         triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'authenticated')
       })
     })
@@ -221,6 +223,8 @@ const initializeEvents = async (client, sessionId) => {
   checkIfEventisEnabled('disconnected', instance.settings.enabledCallbacks)
     .then(_ => {
       client.on('disconnected', (reason) => {
+        // update the instance status
+        Instance.update({ status: 'DISCONNECTED' }, { where: { sessionId: sessionId } })
         triggerWebhook(sessionWebhook, sessionId, instance.authToken, 'disconnected', { reason })
       })
     })
